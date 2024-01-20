@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h1>Nuxt Event management</h1>
-    <TableDemo />
-  </div>
+  <NuxtLayout>
+    <header>header</header>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
