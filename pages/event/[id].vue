@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // imports
 import type { Event } from "~/utils/types";
+import { z } from "zod";
+import type { FormSubmitEvent } from '#ui/types'
 
 // Constants
 const organizers = ['John Doe', 'Alice Smith', 'Json Bourne'];
@@ -29,9 +31,29 @@ const formCaption = computed(() => {
     return 'Update Event';
 });
 
+// Form validations config
+const schema = z.object({
+    title: z.string().min(1, "Required"),
+    date: z.string().min(1, "Required"),
+    location: z.string().min(1, "Required"),
+    organizer: z.string().min(1, "Required"),
+    type: z.string().min(1, "Required"),
+    capacity: z.number(),
+    status: z.string().min(1, "Required")
+});
+
+/** Handler / Utility functions - starts */
+
+const onSubmit = (event: FormSubmitEvent<Omit<Event, "id">>): void => {
+    console.log(event);
+}
+
+/** Handler / Utility functions - ends */
+
 // SEO & Meta config
 useHead({ title: formCaption });
 </script>
+
 <template>
     <div class="flex justify-between">
         <h1 class="text-3xl mb-4">{{ formCaption }}</h1>
@@ -40,7 +62,7 @@ useHead({ title: formCaption });
         </NuxtLink>
     </div>
 
-    <UForm :state="event" class="grid grid-cols-12 gap-6">
+    <UForm :schema="schema" :state="event" class="grid grid-cols-12 gap-6" @submit="onSubmit">
         <UFormGroup label="Title" name="title" class="col-span-6">
             <UInput v-model="event.title" />
         </UFormGroup>
