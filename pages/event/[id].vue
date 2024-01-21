@@ -1,34 +1,45 @@
 <script setup lang="ts">
-    // imports
-    import type { Event } from "~/utils/types";
+// imports
+import type { Event } from "~/utils/types";
 
-    // Constants
-    const organizers = ['John Doe', 'Alice Smith', 'Json Bourne'];
-    const eventTypes = ["Conference", "Networking", "Performance"];
-    const statuses = ["upcoming", "ongoing", "past"]
+// Constants
+const organizers = ['John Doe', 'Alice Smith', 'Json Bourne'];
+const eventTypes = ["Conference", "Networking", "Performance"];
+const statuses = ["upcoming", "ongoing", "past"]
 
-    // state definition
-    const event: Omit<Event, "id"> = reactive({
-        title: "",
-        date: "",
-        location: "",
-        organizer: "",
-        type: "",
-        capacity: 1,
-        status: "upcoming"
-    });
+// state definition
+const event: Omit<Event, "id"> = reactive({
+    title: "",
+    date: "",
+    location: "",
+    organizer: "",
+    type: "",
+    capacity: 1,
+    status: "upcoming"
+});
 
-    // Composables
-    const route = useRoute();
+/** Composables - starts */
+const route = useRoute();
 
-    // Computed Props
-    const formCaption = computed(() => {
-        if (route.params.id === "create") return "Create Event";
-        return 'Update Event';
-    });
+/** Composables - ends */
+
+// Computed Props
+const formCaption = computed(() => {
+    if (route.params.id === "create") return "Create Event";
+    return 'Update Event';
+});
+
+// SEO & Meta config
+useHead({ title: formCaption });
 </script>
 <template>
-    <h1 class="text-3xl mb-4">{{ formCaption }}</h1>
+    <div class="flex justify-between">
+        <h1 class="text-3xl mb-4">{{ formCaption }}</h1>
+        <NuxtLink to="/">
+            <UButton label="Go Back" class="h-1/2" color="sky" />
+        </NuxtLink>
+    </div>
+
     <UForm :state="event" class="grid grid-cols-12 gap-6">
         <UFormGroup label="Title" name="title" class="col-span-6">
             <UInput v-model="event.title" />
@@ -63,5 +74,5 @@
                 Submit
             </UButton>
         </div>
-    </UForm>    
+    </UForm>
 </template>
