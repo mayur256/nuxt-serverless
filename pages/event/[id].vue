@@ -10,7 +10,7 @@ const eventTypes = ["Conference", "Networking", "Performance"];
 const statuses = ["upcoming", "ongoing", "past"]
 
 // state definition
-const event: Omit<Event, "id"> = reactive({
+const event: Omit<Event, "EventId"> = reactive({
     title: "",
     date: "",
     location: "",
