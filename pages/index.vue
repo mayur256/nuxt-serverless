@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Imports
-import type { Event } from '~/utils/types';
+// loading config data
+const runtimeConfig = useRuntimeConfig();
 
 // Constants
 const columns = [
@@ -14,12 +14,35 @@ const columns = [
     { key: "status", label: "Status" },
     { key: "actions", label: "Actions" }
 ];
-// loading config data
-const runtimeConfig = useRuntimeConfig();
+
+// state definition
+const isLoading = ref(false);
+
+// Composables
+const toast = useToast();
 
 // Load data
 const { data } = await useFetch(() => `${runtimeConfig.public.SERVERLESS_DOMAIN}/events/all`);
-const events = (data.value as any)?.body ?? [];
+let events = (data.value as any)?.body ?? [];
+
+/** Handler functions - starts */
+
+async function deleteEvent(eventId: string) {
+    isLoading.value = true;
+    try {
+        const result: any = await $fetch(`${runtimeConfig.public.SERVERLESS_DOMAIN}/events/${eventId}`, {
+            method: "DELETE",
+        });
+        toast.add({ title: result?.body });
+
+        const { data } = await useFetch(() => `${runtimeConfig.public.SERVERLESS_DOMAIN}/events/all`);
+        events = (data.value as any)?.body ?? [];
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+/** Handler functions - ends */
 
 // SEO & Meta config
 useHead({ title: "Events" });
@@ -34,7 +57,7 @@ useHead({ title: "Events" });
     </div>
     <h2>List of the all the events generated in the system</h2>
 
-    <UTable :rows="events" :columns="columns">
+    <UTable :rows="events" :columns="columns" :loading="isLoading">
         <template #actions-data="{row}">
             <div class="flex justify-between">
                 <UTooltip text="Edit">
@@ -44,7 +67,7 @@ useHead({ title: "Events" });
                 </UTooltip>
 
                 <UTooltip text="Delete">
-                    <UButton icon="i-heroicons-trash" color="red" />
+                    <UButton icon="i-heroicons-trash" color="red" @click="deleteEvent(row.EventId)" />
                 </UTooltip>
             </div>
         </template>

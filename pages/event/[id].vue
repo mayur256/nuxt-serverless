@@ -1,11 +1,17 @@
 <script setup lang="ts">
 // imports
-import type { Event } from "~/utils/types";
+import { v4 as uuidv4 } from 'uuid';
 import { z } from "zod";
-import type { FormSubmitEvent } from '#ui/types'
+
+// type imports
+import type { FormSubmitEvent } from '#ui/types';
+import type { Event } from "~/utils/types";
+
+// loading config data
+const runtimeConfig = useRuntimeConfig();
 
 // Constants
-const organizers = ['John Doe', 'Alice Smith', 'Json Bourne'];
+const organizers = ['John Doe', 'Alice Smith', 'Jason Bourne'];
 const eventTypes = ["Conference", "Networking", "Performance"];
 const statuses = ["upcoming", "ongoing", "past"]
 
@@ -19,9 +25,11 @@ const event: Omit<Event, "EventId"> = reactive({
     capacity: 1,
     status: "upcoming"
 });
+const isLoading = ref(false);
 
 /** Composables - starts */
 const route = useRoute();
+const toast = useToast();
 
 /** Composables - ends */
 
@@ -42,10 +50,43 @@ const schema = z.object({
     status: z.string().min(1, "Required")
 });
 
+// Load data
+const { data } = await useFetch(() => `${runtimeConfig.public.SERVERLESS_DOMAIN}/events/${route.params.id}`);
+const fetchedEvent = (data.value as any)?.body;
+event.title = fetchedEvent?.title ?? "";
+event.date = fetchedEvent?.date ?? "";
+event.location = fetchedEvent?.location ?? "";
+event.organizer = fetchedEvent?.organizer ?? "";
+event.type = fetchedEvent?.type ?? "";
+event.capacity = fetchedEvent?.capacity ?? "";
+event.status = fetchedEvent?.status ?? "";
+
 /** Handler / Utility functions - starts */
 
-const onSubmit = (event: FormSubmitEvent<Omit<Event, "id">>): void => {
-    console.log(event);
+const onSubmit = (event: FormSubmitEvent<Omit<Event, "EventId">>): void => {
+    const payload: any = { ...event.data };
+    if (route.params.id == "create") {
+        payload.EventId = uuidv4();
+    } else {
+        payload.EventId = route.params.id;
+    }
+
+    submitEvent(payload, route.params.id == "create");
+}
+
+async function submitEvent(payload: Event, isCreate = false): Promise<void> {
+    try {
+        isLoading.value = true;
+        const result: any = await $fetch(`${runtimeConfig.public.SERVERLESS_DOMAIN}/events`, {
+            method: "POST",
+            body: payload
+        });
+        if (result.statusCode === 200) {
+            toast.add({ title: isCreate ? 'Event created!' : 'Event updated!' });
+        }
+    } finally {
+        isLoading.value = false;
+    }
 }
 
 /** Handler / Utility functions - ends */
@@ -92,7 +133,7 @@ useHead({ title: formCaption });
         </UFormGroup>
 
         <div class="col-span-12 flex justify-end">
-            <UButton type="submit">
+            <UButton type="submit" :loading="isLoading">
                 Submit
             </UButton>
         </div>
